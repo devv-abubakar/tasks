@@ -32,24 +32,14 @@
     <button id="submitBtn">Submit Link</button>
     <div class="task-list">
         <h3>Submissions for selected task:</h3>
-        <div id="submissionsList">Loading...</div>
+        <div id="submissionsList">Awaiting connection...</div>
     </div>
     <a href="admin.html" class="admin-link">Admin Login</a>
 </div>
 
 <script>
-    // --- BHAEE YAHAN APNI DETAILS DAALNI HAIN ---
-    const supabaseUrl = 'YAHAN_APNA_SUPABASE_URL_PASTE_KAREIN'; 
-    const supabaseKey = 'YAHAN_APNI_SUPABASE_ANON_KEY_PASTE_KAREIN'; 
-    // --------------------------------------------
-    
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
+    // 1. Sabse pehle Tasks generate karwa diye (Taakay error ki wajah se ruke nahi)
     const taskSelect = document.getElementById('taskSelect');
-    const linkInput = document.getElementById('githubLink');
-    const submitBtn = document.getElementById('submitBtn');
-    const listContainer = document.getElementById('submissionsList');
-
     for(let i = 1; i <= 20; i++) {
         let opt = document.createElement('option');
         opt.value = `Task ${i}`;
@@ -57,34 +47,48 @@
         taskSelect.appendChild(opt);
     }
 
-    async function fetchTasks() {
-        listContainer.innerHTML = 'Loading...';
-        const { data, error } = await supabase.from('student_tasks').select('*').eq('task_name', taskSelect.value).order('id', { ascending: false });
-        if (error) { listContainer.innerHTML = '<p style="color:red;">Error loading tasks.</p>'; return; }
-        listContainer.innerHTML = '';
-        if(data.length === 0) { listContainer.innerHTML = '<p style="color:#777;">No submissions yet.</p>'; return; }
-        data.forEach(t => {
-            const div = document.createElement('div');
-            div.className = `task-item ${t.status === 'Complete' ? 'complete' : ''}`;
-            div.innerHTML = `
-                <p><strong>Link:</strong> <a href="${t.link}" target="_blank">${t.link}</a></p>
-                <p><strong>Status:</strong> <span class="${t.status === 'Complete' ? 'status-complete' : 'status-pending'}">${t.status}</span></p>
-                ${t.status === 'Complete' ? `<p><strong>Marks:</strong> ${t.marks}</p>` : ''}
-            `;
-            listContainer.appendChild(div);
-        });
+    // 2. YAHAN APNI DETAILS DAALNI HAIN
+    const supabaseUrl = 'YAHAN_APNA_SUPABASE_URL_PASTE_KAREIN'; 
+    const supabaseKey = 'YAHAN_APNI_SUPABASE_ANON_KEY_PASTE_KAREIN'; 
+    
+    // 3. Database logic
+    try {
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        const linkInput = document.getElementById('githubLink');
+        const submitBtn = document.getElementById('submitBtn');
+        const listContainer = document.getElementById('submissionsList');
+
+        async function fetchTasks() {
+            listContainer.innerHTML = 'Loading...';
+            const { data, error } = await supabase.from('student_tasks').select('*').eq('task_name', taskSelect.value).order('id', { ascending: false });
+            if (error) { listContainer.innerHTML = '<p style="color:red;">Please add your correct Supabase URL and Key in the code.</p>'; return; }
+            listContainer.innerHTML = '';
+            if(data.length === 0) { listContainer.innerHTML = '<p style="color:#777;">No submissions yet.</p>'; return; }
+            data.forEach(t => {
+                const div = document.createElement('div');
+                div.className = `task-item ${t.status === 'Complete' ? 'complete' : ''}`;
+                div.innerHTML = `
+                    <p><strong>Link:</strong> <a href="${t.link}" target="_blank">${t.link}</a></p>
+                    <p><strong>Status:</strong> <span class="${t.status === 'Complete' ? 'status-complete' : 'status-pending'}">${t.status}</span></p>
+                    ${t.status === 'Complete' ? `<p><strong>Marks:</strong> ${t.marks}</p>` : ''}
+                `;
+                listContainer.appendChild(div);
+            });
+        }
+
+        submitBtn.onclick = async () => {
+            if(!linkInput.value) { alert("Please enter a valid link!"); return; }
+            submitBtn.disabled = true; submitBtn.textContent = "Submitting...";
+            const { error } = await supabase.from('student_tasks').insert([{ task_name: taskSelect.value, link: linkInput.value, status: 'Pending', marks: '' }]);
+            if (error) { alert("Error submitting task! Check Supabase connection."); } else { linkInput.value = ''; fetchTasks(); alert("Task submitted successfully!"); }
+            submitBtn.disabled = false; submitBtn.textContent = "Submit Link";
+        };
+
+        taskSelect.onchange = fetchTasks;
+        fetchTasks();
+    } catch(err) {
+        document.getElementById('submissionsList').innerHTML = '<p style="color:red;">Database connection error. Setup Supabase keys.</p>';
     }
-
-    submitBtn.onclick = async () => {
-        if(!linkInput.value) { alert("Please enter a valid link!"); return; }
-        submitBtn.disabled = true; submitBtn.textContent = "Submitting...";
-        const { error } = await supabase.from('student_tasks').insert([{ task_name: taskSelect.value, link: linkInput.value, status: 'Pending', marks: '' }]);
-        if (error) { alert("Error submitting task!"); } else { linkInput.value = ''; fetchTasks(); alert("Task submitted successfully!"); }
-        submitBtn.disabled = false; submitBtn.textContent = "Submit Link";
-    };
-
-    taskSelect.onchange = fetchTasks;
-    fetchTasks();
 </script>
 </body>
 </html>
