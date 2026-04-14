@@ -6,7 +6,6 @@
     <title>Instructor Portal | Grade Tasks</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Modern CSS Variables */
         :root {
             --primary: #0f172a;
             --primary-hover: #1e293b;
@@ -26,8 +25,7 @@
         
         .container { width: 100%; max-width: 800px; }
         
-        /* Login Section Styles */
-        #loginSection { max-width: 400px; background: var(--card-bg); padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); margin-top: 50px; text-align: center; }
+        #loginSection { max-width: 400px; background: var(--card-bg); padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); margin-top: 50px; text-align: center; margin-left: auto; margin-right: auto; }
         #loginSection h2 { margin-bottom: 10px; color: var(--primary); }
         #loginSection p { color: var(--text-muted); font-size: 14px; margin-bottom: 25px; }
         #loginSection input { width: 100%; padding: 14px; margin-bottom: 15px; border: 1.5px solid var(--border-color); border-radius: 10px; outline: none; font-size: 15px; background: #f8fafc; transition: 0.3s;}
@@ -36,7 +34,6 @@
         #loginSection button:hover { background: var(--action-hover); }
         #loginError { color: #ef4444; font-size: 13px; margin-top: 15px; display: none; font-weight: bold; background: #fef2f2; padding: 10px; border-radius: 8px; border: 1px solid #fca5a5;}
 
-        /* Dashboard Styles */
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .top-bar h1 { font-size: 22px; font-weight: 800; color: var(--primary); }
         .nav-links { display: flex; gap: 15px; align-items: center; }
@@ -93,7 +90,7 @@
     <input type="text" id="adminUsername" placeholder="Username" onkeypress="handleEnter(event)">
     <input type="password" id="adminPassword" placeholder="Password" onkeypress="handleEnter(event)">
     
-    <button onclick="checkLogin()">Login to Dashboard</button>
+    <button type="button" onclick="checkLogin()">Login to Dashboard</button>
     <p id="loginError">Incorrect Username or Password!</p>
     
     <a href="index.html" style="display:block; margin-top:20px; color:#64748b; font-size:14px; text-decoration:none; font-weight: 600;">← Back to Student Portal</a>
@@ -104,7 +101,7 @@
         <h1>Instructor Dashboard</h1>
         <div class="nav-links">
             <a href="index.html">Student Portal</a>
-            <button class="logout-btn" onclick="logout()">Logout</button>
+            <button type="button" class="logout-btn" onclick="logout()">Logout</button>
         </div>
     </div>
 
@@ -122,28 +119,37 @@
 
 <script>
     // --- 1. LOGIN LOGIC ---
-    // Updated Username and Password
     const ADMIN_USER = "admin";
     const ADMIN_PASS = "12344231"; 
 
     function checkLogin() {
-        const user = document.getElementById('adminUsername').value.trim();
-        const pass = document.getElementById('adminPassword').value.trim();
+        // Pura safe logic
+        const userField = document.getElementById('adminUsername');
+        const passField = document.getElementById('adminPassword');
+        const errortext = document.getElementById('loginError');
         
+        if(!userField || !passField) return; // safety check
+        
+        const user = userField.value.trim();
+        const pass = passField.value.trim();
+        
+        errortext.style.display = 'none'; // reset error
+
         if (user === ADMIN_USER && pass === ADMIN_PASS) {
             sessionStorage.setItem('admin_logged_in', 'true');
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
-            fetchAdminTasks(); // Load data after successful login
+            fetchAdminTasks(); 
         } else {
-            document.getElementById('loginError').style.display = 'block';
-            // Optional: Shake effect or highlight fields can be added here
+            errortext.style.display = 'block';
         }
     }
 
-    // Trigger login when "Enter" key is pressed on either field
     function handleEnter(e) {
-        if (e.key === 'Enter') checkLogin();
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Prevents any accidental form submission
+            checkLogin();
+        }
     }
 
     function logout() {
@@ -155,7 +161,7 @@
         document.getElementById('loginSection').style.display = 'block';
     }
 
-    // Check if already logged in when page refreshes
+    // Check if already logged in on page load
     window.onload = () => {
         if (sessionStorage.getItem('admin_logged_in') === 'true') {
             document.getElementById('loginSection').style.display = 'none';
@@ -164,28 +170,47 @@
         }
     };
 
+
     // --- 2. SUPABASE SETUP & DATA LOGIC ---
-    const filterSelect = document.getElementById('filterSelect');
-    for(let i = 1; i <= 20; i++) {
-        let opt = document.createElement('option');
-        opt.value = `Task ${i}`; opt.textContent = `Task ${i}`; filterSelect.appendChild(opt);
+    let supabase; // Global variable
+    try {
+        const filterSelect = document.getElementById('filterSelect');
+        if (filterSelect) {
+            for(let i = 1; i <= 20; i++) {
+                let opt = document.createElement('option');
+                opt.value = `Task ${i}`; opt.textContent = `Task ${i}`; filterSelect.appendChild(opt);
+            }
+            filterSelect.onchange = fetchAdminTasks;
+        }
+
+        const supabaseUrl = 'https://ptwgiadzpzawjftfxwwf.supabase.co'; 
+        const supabaseKey = 'sb_publishable_Qoy-USZ2VP94_n5x1BcjWQ_HV5deVBB'; 
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    } catch(err) {
+        console.error("Supabase Initialization Error:", err);
     }
 
-    const supabaseUrl = 'https://ptwgiadzpzawjftfxwwf.supabase.co'; 
-    const supabaseKey = 'sb_publishable_Qoy-USZ2VP94_n5x1BcjWQ_HV5deVBB'; 
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-    const adminList = document.getElementById('adminList');
-
     async function fetchAdminTasks() {
+        const adminList = document.getElementById('adminList');
+        if(!supabase) {
+            adminList.innerHTML = '<div class="empty-state" style="color:red;">Failed to connect to database. Try refreshing.</div>';
+            return;
+        }
+
         adminList.innerHTML = '<div class="empty-state">Fetching secure data...</div>';
+        const filterVal = document.getElementById('filterSelect').value;
         
         let query = supabase.from('student_tasks').select('*').order('id', { ascending: false });
-        if (filterSelect.value !== 'All') { query = query.eq('task_name', filterSelect.value); }
+        if (filterVal !== 'All') { query = query.eq('task_name', filterVal); }
         
         const { data, error } = await query;
-        if (error) { adminList.innerHTML = '<div class="empty-state" style="color:red;">Database error. Check console.</div>'; return; }
-        adminList.innerHTML = '';
         
+        if (error) { 
+            adminList.innerHTML = '<div class="empty-state" style="color:red;">Database error. Check internet connection.</div>'; 
+            return; 
+        }
+        
+        adminList.innerHTML = '';
         if (data.length === 0) { adminList.innerHTML = '<div class="empty-state">No submissions found.</div>'; return; }
 
         data.forEach(t => {
@@ -207,9 +232,9 @@
                     </div>
                     <div class="input-box large">
                         <label>Instructor Remarks</label>
-                        <input type="text" id="remarks-${t.id}" placeholder="e.g. Excellent work, code is very clean." value="${t.remarks || ''}">
+                        <input type="text" id="remarks-${t.id}" placeholder="e.g. Excellent work." value="${t.remarks || ''}">
                     </div>
-                    <button class="btn-update" onclick="updateTask(${t.id}, event)">
+                    <button type="button" class="btn-update" onclick="updateTask(${t.id}, event)">
                         ${isComplete ? 'Update Grade' : 'Mark Complete'}
                     </button>
                 </div>
@@ -218,8 +243,9 @@
         });
     }
 
-    // Update Marks & Remarks in Supabase
     window.updateTask = async function(id, event) {
+        if(!supabase) return;
+        
         const marksVal = document.getElementById(`marks-${id}`).value.trim();
         const remarksVal = document.getElementById(`remarks-${id}`).value.trim();
         
@@ -237,12 +263,9 @@
             btn.textContent = originalText;
             btn.disabled = false;
         } else {
-            // Refresh list to show updated details
             fetchAdminTasks();
         }
     };
-
-    filterSelect.onchange = fetchAdminTasks;
 </script>
 </body>
 </html>
