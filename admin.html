@@ -123,17 +123,16 @@
     const ADMIN_PASS = "12344231"; 
 
     function checkLogin() {
-        // Pura safe logic
         const userField = document.getElementById('adminUsername');
         const passField = document.getElementById('adminPassword');
         const errortext = document.getElementById('loginError');
         
-        if(!userField || !passField) return; // safety check
+        if(!userField || !passField) return; 
         
         const user = userField.value.trim();
         const pass = passField.value.trim();
         
-        errortext.style.display = 'none'; // reset error
+        errortext.style.display = 'none'; 
 
         if (user === ADMIN_USER && pass === ADMIN_PASS) {
             sessionStorage.setItem('admin_logged_in', 'true');
@@ -147,7 +146,7 @@
 
     function handleEnter(e) {
         if (e.key === 'Enter') {
-            e.preventDefault(); // Prevents any accidental form submission
+            e.preventDefault(); 
             checkLogin();
         }
     }
@@ -161,7 +160,6 @@
         document.getElementById('loginSection').style.display = 'block';
     }
 
-    // Check if already logged in on page load
     window.onload = () => {
         if (sessionStorage.getItem('admin_logged_in') === 'true') {
             document.getElementById('loginSection').style.display = 'none';
@@ -170,37 +168,28 @@
         }
     };
 
+    // --- 2. SUPABASE LOGIC FIX ---
+    // Variable name changed to supabaseClient to prevent SyntaxError
+    const supabaseUrl = 'https://ptwgiadzpzawjftfxwwf.supabase.co'; 
+    const supabaseKey = 'sb_publishable_Qoy-USZ2VP94_n5x1BcjWQ_HV5deVBB'; 
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // --- 2. SUPABASE SETUP & DATA LOGIC ---
-    let supabase; // Global variable
-    try {
-        const filterSelect = document.getElementById('filterSelect');
-        if (filterSelect) {
-            for(let i = 1; i <= 20; i++) {
-                let opt = document.createElement('option');
-                opt.value = `Task ${i}`; opt.textContent = `Task ${i}`; filterSelect.appendChild(opt);
-            }
-            filterSelect.onchange = fetchAdminTasks;
+    const filterSelect = document.getElementById('filterSelect');
+    if (filterSelect) {
+        for(let i = 1; i <= 20; i++) {
+            let opt = document.createElement('option');
+            opt.value = `Task ${i}`; opt.textContent = `Task ${i}`; filterSelect.appendChild(opt);
         }
-
-        const supabaseUrl = 'https://ptwgiadzpzawjftfxwwf.supabase.co'; 
-        const supabaseKey = 'sb_publishable_Qoy-USZ2VP94_n5x1BcjWQ_HV5deVBB'; 
-        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-    } catch(err) {
-        console.error("Supabase Initialization Error:", err);
+        filterSelect.onchange = fetchAdminTasks;
     }
 
     async function fetchAdminTasks() {
         const adminList = document.getElementById('adminList');
-        if(!supabase) {
-            adminList.innerHTML = '<div class="empty-state" style="color:red;">Failed to connect to database. Try refreshing.</div>';
-            return;
-        }
-
         adminList.innerHTML = '<div class="empty-state">Fetching secure data...</div>';
+        
         const filterVal = document.getElementById('filterSelect').value;
         
-        let query = supabase.from('student_tasks').select('*').order('id', { ascending: false });
+        let query = supabaseClient.from('student_tasks').select('*').order('id', { ascending: false });
         if (filterVal !== 'All') { query = query.eq('task_name', filterVal); }
         
         const { data, error } = await query;
@@ -244,8 +233,6 @@
     }
 
     window.updateTask = async function(id, event) {
-        if(!supabase) return;
-        
         const marksVal = document.getElementById(`marks-${id}`).value.trim();
         const remarksVal = document.getElementById(`remarks-${id}`).value.trim();
         
@@ -254,7 +241,7 @@
         btn.textContent = "Saving...";
         btn.disabled = true;
 
-        const { error } = await supabase.from('student_tasks')
+        const { error } = await supabaseClient.from('student_tasks')
             .update({ status: 'Complete', marks: marksVal, remarks: remarksVal })
             .eq('id', id);
 
