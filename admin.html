@@ -30,11 +30,11 @@
         #loginSection { max-width: 400px; background: var(--card-bg); padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); margin-top: 50px; text-align: center; }
         #loginSection h2 { margin-bottom: 10px; color: var(--primary); }
         #loginSection p { color: var(--text-muted); font-size: 14px; margin-bottom: 25px; }
-        #loginSection input { width: 100%; padding: 14px; margin-bottom: 15px; border: 1.5px solid var(--border-color); border-radius: 10px; outline: none; font-size: 15px; }
-        #loginSection input:focus { border-color: var(--action); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
-        #loginSection button { width: 100%; padding: 14px; background: var(--action); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        #loginSection input { width: 100%; padding: 14px; margin-bottom: 15px; border: 1.5px solid var(--border-color); border-radius: 10px; outline: none; font-size: 15px; background: #f8fafc; transition: 0.3s;}
+        #loginSection input:focus { border-color: var(--action); background: #fff; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+        #loginSection button { width: 100%; padding: 14px; background: var(--action); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 5px;}
         #loginSection button:hover { background: var(--action-hover); }
-        #loginError { color: #ef4444; font-size: 13px; margin-top: 10px; display: none; font-weight: bold; }
+        #loginError { color: #ef4444; font-size: 13px; margin-top: 15px; display: none; font-weight: bold; background: #fef2f2; padding: 10px; border-radius: 8px; border: 1px solid #fca5a5;}
 
         /* Dashboard Styles */
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
@@ -88,11 +88,15 @@
 
 <div id="loginSection" class="container">
     <h2>Admin Login</h2>
-    <p>Please enter the instructor password to continue.</p>
-    <input type="password" id="adminPassword" placeholder="Enter Password" onkeypress="handleEnter(event)">
+    <p>Please enter your credentials to access the portal.</p>
+    
+    <input type="text" id="adminUsername" placeholder="Username" onkeypress="handleEnter(event)">
+    <input type="password" id="adminPassword" placeholder="Password" onkeypress="handleEnter(event)">
+    
     <button onclick="checkLogin()">Login to Dashboard</button>
-    <p id="loginError">Incorrect Password. Try again!</p>
-    <a href="index.html" style="display:block; margin-top:20px; color:#64748b; font-size:14px; text-decoration:none;">← Back to Student Portal</a>
+    <p id="loginError">Incorrect Username or Password!</p>
+    
+    <a href="index.html" style="display:block; margin-top:20px; color:#64748b; font-size:14px; text-decoration:none; font-weight: 600;">← Back to Student Portal</a>
 </div>
 
 <div id="dashboardSection" class="container" style="display: none;">
@@ -118,27 +122,33 @@
 
 <script>
     // --- 1. LOGIN LOGIC ---
-    // Change your password here
-    const ADMIN_PASSWORD = "admin123"; 
+    // Updated Username and Password
+    const ADMIN_USER = "admin";
+    const ADMIN_PASS = "12344231"; 
 
     function checkLogin() {
-        const pass = document.getElementById('adminPassword').value;
-        if (pass === ADMIN_PASSWORD) {
+        const user = document.getElementById('adminUsername').value.trim();
+        const pass = document.getElementById('adminPassword').value.trim();
+        
+        if (user === ADMIN_USER && pass === ADMIN_PASS) {
             sessionStorage.setItem('admin_logged_in', 'true');
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
             fetchAdminTasks(); // Load data after successful login
         } else {
             document.getElementById('loginError').style.display = 'block';
+            // Optional: Shake effect or highlight fields can be added here
         }
     }
 
+    // Trigger login when "Enter" key is pressed on either field
     function handleEnter(e) {
         if (e.key === 'Enter') checkLogin();
     }
 
     function logout() {
         sessionStorage.removeItem('admin_logged_in');
+        document.getElementById('adminUsername').value = '';
         document.getElementById('adminPassword').value = '';
         document.getElementById('loginError').style.display = 'none';
         document.getElementById('dashboardSection').style.display = 'none';
@@ -153,7 +163,6 @@
             fetchAdminTasks();
         }
     };
-
 
     // --- 2. SUPABASE SETUP & DATA LOGIC ---
     const filterSelect = document.getElementById('filterSelect');
@@ -211,8 +220,8 @@
 
     // Update Marks & Remarks in Supabase
     window.updateTask = async function(id, event) {
-        const marksVal = document.getElementById(`marks-${id}`).value;
-        const remarksVal = document.getElementById(`remarks-${id}`).value;
+        const marksVal = document.getElementById(`marks-${id}`).value.trim();
+        const remarksVal = document.getElementById(`remarks-${id}`).value.trim();
         
         const btn = event.target;
         const originalText = btn.textContent;
@@ -228,7 +237,7 @@
             btn.textContent = originalText;
             btn.disabled = false;
         } else {
-            // Refresh list to show green badge
+            // Refresh list to show updated details
             fetchAdminTasks();
         }
     };
