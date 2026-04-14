@@ -86,7 +86,7 @@
             letter-spacing: 0.5px;
         }
 
-        select, input[type="url"] {
+        select, input[type="text"] {
             width: 100%;
             padding: 14px 16px;
             font-size: 15px;
@@ -98,7 +98,7 @@
             outline: none;
         }
 
-        select:focus, input[type="url"]:focus {
+        select:focus, input[type="text"]:focus {
             border-color: var(--primary);
             background-color: #fff;
             box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
@@ -160,15 +160,17 @@
         .task-info {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start; /* Changed to flex-start for long links */
+            gap: 15px;
         }
 
         .task-link {
             color: var(--primary);
             text-decoration: none;
             font-weight: 600;
-            word-break: break-all;
+            word-break: break-all; /* Ensures long links break to next line instead of overflowing */
             font-size: 14px;
+            line-height: 1.4;
         }
 
         .task-link:hover {
@@ -183,6 +185,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            white-space: nowrap; /* Prevents badge text from breaking */
         }
 
         .status-pending {
@@ -249,7 +252,7 @@
     <div class="card">
         <div class="header">
             <h2>Student Task Portal</h2>
-            <p>Submit your GitHub repository links securely.</p>
+            <p>Submit your repository links securely.</p>
         </div>
 
         <div class="form-group">
@@ -258,8 +261,8 @@
         </div>
 
         <div class="form-group">
-            <label for="githubLink">Repository Link</label>
-            <input type="url" id="githubLink" placeholder="https://github.com/username/repo" required>
+            <label for="githubLink">Task Link</label>
+            <input type="text" id="githubLink" placeholder="github.com/username/repo" required>
         </div>
 
         <button id="submitBtn">Submit Assignment</button>
@@ -279,12 +282,12 @@
 </div>
 
 <script>
-    // 1. Populate Tasks
+    // 1. Populate Tasks 
     const taskSelect = document.getElementById('taskSelect');
     for(let i = 1; i <= 20; i++) {
         let opt = document.createElement('option');
         opt.value = `Task ${i}`;
-        opt.textContent = `Assignment Phase ${i}`;
+        opt.textContent = `Task ${i}`;
         taskSelect.appendChild(opt);
     }
 
@@ -326,10 +329,11 @@
                 const statusClass = t.status === 'Complete' ? 'status-complete' : 'status-pending';
                 const marksHtml = t.status === 'Complete' && t.marks ? `<div class="marks-badge">Score: ${t.marks}</div>` : '';
                 
+                // YAHAN FIX KIYA HAI: t.link pura show hoga ab bina kate
                 div.innerHTML = `
                     <div class="task-info">
                         <a href="${t.link}" target="_blank" class="task-link">
-                            🔗 ${t.link.length > 35 ? t.link.substring(0, 35) + '...' : t.link}
+                            🔗 ${t.link}
                         </a>
                         <span class="badge ${statusClass}">${t.status}</span>
                     </div>
@@ -340,9 +344,17 @@
         }
 
         submitBtn.onclick = async () => {
-            if(!linkInput.value || !linkInput.value.includes('http')) { 
-                alert("Please enter a valid URL!"); 
+            let finalLink = linkInput.value.trim();
+            
+            // Empty check
+            if(!finalLink) { 
+                alert("Please enter a link!"); 
                 return; 
+            }
+
+            // Smart Link Fixer: Automatically add https:// if missing
+            if (!finalLink.startsWith('http://') && !finalLink.startsWith('https://')) {
+                finalLink = 'https://' + finalLink;
             }
             
             submitBtn.disabled = true; 
@@ -350,7 +362,7 @@
             
             const { error } = await supabase.from('student_tasks').insert([{ 
                 task_name: taskSelect.value, 
-                link: linkInput.value, 
+                link: finalLink, 
                 status: 'Pending', 
                 marks: '' 
             }]);
