@@ -6,6 +6,7 @@
     <title>Student Portal | Task Submission</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* Modern CSS Variables */
         :root {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
@@ -20,35 +21,250 @@
             --border-color: #e2e8f0;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
-        .container { width: 100%; max-width: 600px; margin-top: 40px; }
-        .card { background: var(--card-bg); padding: 30px 40px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid var(--border-color); margin-bottom: 24px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h2 { font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; }
-        .header p { color: var(--text-muted); font-size: 14px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        select, input[type="text"] { width: 100%; padding: 14px 16px; font-size: 15px; border: 1.5px solid var(--border-color); border-radius: 10px; background-color: #f8fafc; color: var(--text-main); transition: all 0.3s ease; outline: none; }
-        select:focus, input[type="text"]:focus { border-color: var(--primary); background-color: #fff; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
-        button { width: 100%; background-color: var(--primary); color: white; border: none; padding: 16px; font-size: 16px; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; }
-        button:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
-        button:disabled { background-color: #94a3b8; cursor: not-allowed; }
-        
-        .task-list-header { font-size: 18px; font-weight: 700; margin-bottom: 16px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
-        .task-item { background: #fff; padding: 20px; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
-        .task-info { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
-        .task-link { color: var(--primary); text-decoration: none; font-weight: 600; word-break: break-all; font-size: 14px; line-height: 1.4; }
-        .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
-        .status-pending { background-color: var(--warning-bg); color: #b45309; }
-        .status-complete { background-color: var(--success-bg); color: #047857; }
-        
-        .feedback-section { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color); }
-        .marks-badge { background-color: var(--primary); color: white; font-weight: 700; padding: 6px 12px; border-radius: 8px; font-size: 13px; display: inline-block; margin-bottom: 8px; }
-        .remarks-box { background-color: #f0fdf4; border-left: 4px solid var(--success); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 13px; color: #166534; font-weight: 500; }
-        
-        .admin-link { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 20px; font-size: 14px; font-weight: 600; color: var(--text-muted); text-decoration: none; }
-        .empty-state { text-align: center; padding: 30px; color: var(--text-muted); font-style: italic; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 40px;
+        }
+
+        /* Card Styling */
+        .card {
+            background: var(--card-bg);
+            padding: 30px 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            border: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h2 {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 15px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            background-color: #f8fafc;
+            color: var(--text-main);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        select:focus, input[type="text"]:focus {
+            border-color: var(--primary);
+            background-color: #fff;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Button Styling */
+        button {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Task List Styling */
+        .task-list-header {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .task-item {
+            background: #fff;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: transform 0.2s;
+        }
+
+        .task-item:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .task-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            word-break: break-all; /* Ye lambay link ko theek se dikhayega */
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .task-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Badges */
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .status-pending {
+            background-color: var(--warning-bg);
+            color: #b45309;
+        }
+
+        .status-complete {
+            background-color: var(--success-bg);
+            color: #047857;
+        }
+
+        /* Feedback / Remarks Section */
+        .feedback-section {
+            margin-top: 10px;
+            padding-top: 15px;
+            border-top: 1px dashed var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .marks-badge {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: inline-block;
+            width: fit-content;
+        }
+
+        .remarks-box {
+            background-color: #f0fdf4;
+            border-left: 4px solid var(--success);
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            font-size: 14px;
+            color: #166534;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        /* Admin Link */
+        .admin-link {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            margin-top: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .admin-link:hover {
+            color: var(--primary);
+        }
+
+        /* Loading & Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-style: italic;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px dashed #cbd5e1;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 480px) {
+            .card { padding: 20px; }
+            .task-info { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .badge { align-self: flex-start; }
+        }
     </style>
 </head>
 <body>
@@ -59,29 +275,48 @@
             <h2>Student Task Portal</h2>
             <p>Submit your repository links securely.</p>
         </div>
-        <div class="form-group"><label>Select Assignment</label><select id="taskSelect"></select></div>
-        <div class="form-group"><label>Task Link</label><input type="text" id="githubLink" placeholder="github.com/username/repo" required></div>
+
+        <div class="form-group">
+            <label for="taskSelect">Select Assignment</label>
+            <select id="taskSelect"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="githubLink">Task Link</label>
+            <input type="text" id="githubLink" placeholder="github.com/username/repo" required>
+        </div>
+
         <button id="submitBtn">Submit Assignment</button>
     </div>
 
     <div class="card">
         <h3 class="task-list-header">Your Submissions</h3>
-        <div id="submissionsList"><div class="empty-state">Connecting to database...</div></div>
+        <div id="submissionsList">
+            <div class="empty-state">Connecting to database...</div>
+        </div>
     </div>
 
-    <a href="admin.html" class="admin-link">Admin Portal Access</a>
+    <a href="admin.html" class="admin-link">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+        Admin Portal Access
+    </a>
 </div>
 
 <script>
+    // 1. Populate Tasks (Task 1 to Task 20)
     const taskSelect = document.getElementById('taskSelect');
     for(let i = 1; i <= 20; i++) {
         let opt = document.createElement('option');
-        opt.value = `Task ${i}`; opt.textContent = `Task ${i}`; taskSelect.appendChild(opt);
+        opt.value = `Task ${i}`;
+        opt.textContent = `Task ${i}`;
+        taskSelect.appendChild(opt);
     }
 
+    // 2. Supabase Keys
     const supabaseUrl = 'https://ptwgiadzpzawjftfxwwf.supabase.co'; 
     const supabaseKey = 'sb_publishable_Qoy-USZ2VP94_n5x1BcjWQ_HV5deVBB'; 
     
+    // 3. Database Logic
     try {
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
         const linkInput = document.getElementById('githubLink');
@@ -90,28 +325,49 @@
 
         async function fetchTasks() {
             listContainer.innerHTML = '<div class="empty-state">Loading your submissions...</div>';
-            const { data, error } = await supabase.from('student_tasks').select('*').eq('task_name', taskSelect.value).order('id', { ascending: false });
-            if (error) { listContainer.innerHTML = `<div class="empty-state" style="color:#ef4444;">Error: Database connection failed.</div>`; return; }
-            listContainer.innerHTML = '';
-            if(data.length === 0) { listContainer.innerHTML = '<div class="empty-state">No submissions found for this task yet.</div>'; return; }
             
+            // Fetching data from Supabase
+            const { data, error } = await supabase.from('student_tasks')
+                .select('*')
+                .eq('task_name', taskSelect.value)
+                .order('id', { ascending: false });
+                
+            if (error) { 
+                listContainer.innerHTML = `<div class="empty-state" style="color:#ef4444;">Error: Check your database connection.</div>`; 
+                return; 
+            }
+            
+            listContainer.innerHTML = '';
+            
+            // If no data
+            if(data.length === 0) { 
+                listContainer.innerHTML = '<div class="empty-state">No submissions found for this task yet.</div>'; 
+                return; 
+            }
+            
+            // Render Tasks
             data.forEach(t => {
                 const div = document.createElement('div');
                 div.className = 'task-item';
+                
                 const statusClass = t.status === 'Complete' ? 'status-complete' : 'status-pending';
                 
+                // Handling Marks & Remarks HTML intelligently
                 let feedbackHtml = '';
-                if (t.status === 'Complete') {
+                if (t.status === 'Complete' && (t.marks || t.remarks)) {
                     feedbackHtml = `
                     <div class="feedback-section">
                         ${t.marks ? `<div class="marks-badge">Score: ${t.marks}/10</div>` : ''}
-                        ${t.remarks ? `<div class="remarks-box"><strong>Instructor Remarks:</strong> ${t.remarks}</div>` : ''}
+                        ${t.remarks ? `<div class="remarks-box"><strong>Instructor Remarks:</strong><br/> ${t.remarks}</div>` : ''}
                     </div>`;
                 }
                 
+                // Assembling the card
                 div.innerHTML = `
                     <div class="task-info">
-                        <a href="${t.link}" target="_blank" class="task-link">🔗 ${t.link}</a>
+                        <a href="${t.link}" target="_blank" class="task-link">
+                            🔗 ${t.link}
+                        </a>
                         <span class="badge ${statusClass}">${t.status}</span>
                     </div>
                     ${feedbackHtml}
@@ -122,17 +378,50 @@
 
         submitBtn.onclick = async () => {
             let finalLink = linkInput.value.trim();
-            if(!finalLink) return alert("Please enter a link!");
-            if (!finalLink.startsWith('http://') && !finalLink.startsWith('https://')) finalLink = 'https://' + finalLink;
             
-            submitBtn.disabled = true; submitBtn.textContent = "Submitting securely...";
-            const { error } = await supabase.from('student_tasks').insert([{ task_name: taskSelect.value, link: finalLink, status: 'Pending' }]);
+            // Validation
+            if(!finalLink) { 
+                alert("Please enter a task link!"); 
+                return; 
+            }
+
+            // Smart Link Fixer: Automatically add https:// if missing
+            if (!finalLink.startsWith('http://') && !finalLink.startsWith('https://')) {
+                finalLink = 'https://' + finalLink;
+            }
             
-            if (error) alert("Error submitting task!"); else { linkInput.value = ''; fetchTasks(); }
-            submitBtn.disabled = false; submitBtn.textContent = "Submit Assignment";
+            submitBtn.disabled = true; 
+            submitBtn.textContent = "Submitting securely...";
+            
+            // Insert into Database
+            const { error } = await supabase.from('student_tasks').insert([{ 
+                task_name: taskSelect.value, 
+                link: finalLink, 
+                status: 'Pending', 
+                marks: '',
+                remarks: ''
+            }]);
+            
+            if (error) { 
+                alert("Error submitting task! Check database connection."); 
+            } else { 
+                linkInput.value = ''; 
+                fetchTasks(); // Refresh the list
+            }
+            
+            submitBtn.disabled = false; 
+            submitBtn.textContent = "Submit Assignment";
         };
-        taskSelect.onchange = fetchTasks; fetchTasks();
-    } catch(err) { listContainer.innerHTML = '<div class="empty-state">System failed.</div>'; }
+
+        // Reload list when Dropdown changes
+        taskSelect.onchange = fetchTasks;
+        
+        // Initial Fetch
+        fetchTasks();
+        
+    } catch(err) {
+        document.getElementById('submissionsList').innerHTML = '<div class="empty-state" style="color:#ef4444;">System initialization failed.</div>';
+    }
 </script>
 </body>
 </html>
