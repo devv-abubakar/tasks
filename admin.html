@@ -39,23 +39,13 @@
         <div style="clear: both;"></div>
         <label for="adminTaskSelect">Filter by Task:</label>
         <select id="adminTaskSelect"></select>
-        <div id="adminList">Loading...</div>
+        <div id="adminList">Awaiting connection...</div>
     </div>
 </div>
 
 <script>
-    // --- BHAEE YAHAN APNI DETAILS DAALNI HAIN ---
-    const supabaseUrl = 'YAHAN_APNA_SUPABASE_URL_PASTE_KAREIN'; 
-    const supabaseKey = 'YAHAN_APNI_SUPABASE_ANON_KEY_PASTE_KAREIN'; 
-    // --------------------------------------------
-
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-    const loginSection = document.getElementById('loginSection');
-    const dashboardSection = document.getElementById('dashboardSection');
+    // 1. Sabse pehle Tasks generate karwa diye
     const adminTaskSelect = document.getElementById('adminTaskSelect');
-    const adminList = document.getElementById('adminList');
-
     for(let i = 1; i <= 20; i++) {
         let opt = document.createElement('option');
         opt.value = `Task ${i}`;
@@ -63,6 +53,11 @@
         adminTaskSelect.appendChild(opt);
     }
 
+    const loginSection = document.getElementById('loginSection');
+    const dashboardSection = document.getElementById('dashboardSection');
+    const adminList = document.getElementById('adminList');
+
+    // Login Logic
     document.getElementById('loginBtn').onclick = () => {
         if(document.getElementById('username').value === 'admin' && document.getElementById('password').value === '12344231') {
             loginSection.style.display = 'none'; dashboardSection.style.display = 'block'; fetchAdminTasks();
@@ -74,35 +69,46 @@
         document.getElementById('username').value = ''; document.getElementById('password').value = '';
     };
 
-    async function fetchAdminTasks() {
-        adminList.innerHTML = 'Loading...';
-        const { data, error } = await supabase.from('student_tasks').select('*').eq('task_name', adminTaskSelect.value).order('id', { ascending: false });
-        if (error) { adminList.innerHTML = '<p>Error loading tasks.</p>'; return; }
-        adminList.innerHTML = '';
-        if(data.length === 0) { adminList.innerHTML = '<p>No submissions for this task yet.</p>'; return; }
-        data.forEach(t => {
-            const div = document.createElement('div'); div.className = 'task-item';
-            if(t.status === 'Pending') {
-                div.innerHTML = `
-                    <div class="task-info"><p><strong>Link:</strong> <a href="${t.link}" target="_blank">${t.link}</a></p><p><strong>Status:</strong> Pending</p></div>
-                    <div class="marks-area"><input type="text" id="marks-${t.id}" placeholder="Enter marks"><button onclick="submitMarks(${t.id}, this)">Save</button></div>`;
-            } else {
-                div.innerHTML = `<div class="task-info"><p><strong>Link:</strong> <a href="${t.link}" target="_blank">${t.link}</a></p><p><strong>Status:</strong> <span class="status-complete">Complete</span></p></div><div><strong>Given Marks:</strong> ${t.marks}</div>`;
-            }
-            adminList.appendChild(div);
-        });
+    // 2. YAHAN APNI DETAILS DAALNI HAIN
+    const supabaseUrl = 'YAHAN_APNA_SUPABASE_URL_PASTE_KAREIN'; 
+    const supabaseKey = 'YAHAN_APNI_SUPABASE_ANON_KEY_PASTE_KAREIN'; 
+
+    // 3. Database logic
+    try {
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        window.fetchAdminTasks = async function() {
+            adminList.innerHTML = 'Loading...';
+            const { data, error } = await supabase.from('student_tasks').select('*').eq('task_name', adminTaskSelect.value).order('id', { ascending: false });
+            if (error) { adminList.innerHTML = '<p>Please add your correct Supabase URL and Key in the code.</p>'; return; }
+            adminList.innerHTML = '';
+            if(data.length === 0) { adminList.innerHTML = '<p>No submissions for this task yet.</p>'; return; }
+            data.forEach(t => {
+                const div = document.createElement('div'); div.className = 'task-item';
+                if(t.status === 'Pending') {
+                    div.innerHTML = `
+                        <div class="task-info"><p><strong>Link:</strong> <a href="${t.link}" target="_blank">${t.link}</a></p><p><strong>Status:</strong> Pending</p></div>
+                        <div class="marks-area"><input type="text" id="marks-${t.id}" placeholder="Enter marks"><button onclick="submitMarks(${t.id}, this)">Save</button></div>`;
+                } else {
+                    div.innerHTML = `<div class="task-info"><p><strong>Link:</strong> <a href="${t.link}" target="_blank">${t.link}</a></p><p><strong>Status:</strong> <span class="status-complete">Complete</span></p></div><div><strong>Given Marks:</strong> ${t.marks}</div>`;
+                }
+                adminList.appendChild(div);
+            });
+        }
+
+        window.submitMarks = async function(id, btnElement) {
+            const marksValue = document.getElementById(`marks-${id}`).value;
+            if(!marksValue) { alert("Please enter marks first!"); return; }
+            btnElement.disabled = true; btnElement.textContent = "Saving...";
+            const { error } = await supabase.from('student_tasks').update({ status: 'Complete', marks: marksValue }).eq('id', id);
+            if (error) { alert("Error updating marks!"); btnElement.disabled = false; btnElement.textContent = "Save"; } 
+            else { alert("Marks updated successfully!"); fetchAdminTasks(); }
+        };
+
+        adminTaskSelect.onchange = fetchAdminTasks;
+    } catch(err) {
+        // Ignored, will just not fetch data
     }
-
-    window.submitMarks = async function(id, btnElement) {
-        const marksValue = document.getElementById(`marks-${id}`).value;
-        if(!marksValue) { alert("Please enter marks first!"); return; }
-        btnElement.disabled = true; btnElement.textContent = "Saving...";
-        const { error } = await supabase.from('student_tasks').update({ status: 'Complete', marks: marksValue }).eq('id', id);
-        if (error) { alert("Error updating marks!"); btnElement.disabled = false; btnElement.textContent = "Save"; } 
-        else { alert("Marks updated successfully!"); fetchAdminTasks(); }
-    };
-
-    adminTaskSelect.onchange = fetchAdminTasks;
 </script>
 </body>
 </html>
