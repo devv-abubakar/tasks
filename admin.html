@@ -3,112 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Instructor Portal | Grade Tasks</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #e9ecef; margin: 0; padding: 20px; }
-        .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h2 { color: #333; text-align: center; }
-        input, select, button { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { background-color: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: #0056b3; }
-        .task-item { background: #fdfdfd; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;}
-        .task-info { flex: 1; min-width: 250px; }
-        .marks-area { display: flex; gap: 10px; align-items: center; }
-        .marks-area input { width: 100px; margin: 0; }
-        .marks-area button { width: auto; background-color: #28a745; margin: 0; }
-        .status-complete { color: #28a745; font-weight: bold; }
-        #dashboardSection { display: none; }
+        :root {
+            --primary: #0f172a;
+            --primary-hover: #1e293b;
+            --action: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 30px 20px; }
+        
+        .top-bar { max-width: 800px; margin: 0 auto 20px auto; display: flex; justify-content: space-between; align-items: center; }
+        .top-bar h1 { font-size: 24px; font-weight: 800; }
+        .back-link { text-decoration: none; color: var(--action); font-weight: 600; font-size: 14px; }
+        
+        .container { width: 100%; max-width: 800px; margin: 0 auto; background: var(--card-bg); padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+        
+        .filter-group { margin-bottom: 25px; }
+        select { width: 100%; max-width: 300px; padding: 12px; font-size: 15px; border: 1.5px solid var(--border-color); border-radius: 8px; outline: none; }
+        
+        .task-card { border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; margin-bottom: 16px; background-color: #fff; }
+        .task-card.completed { border-left: 4px solid var(--success); }
+        .task-card.pending { border-left: 4px solid var(--warning); }
+        
+        .task-header { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; }
+        .task-title { font-weight: 700; font-size: 16px; }
+        .task-link { color: var(--action); text-decoration: none; word-break: break-all; font-size: 14px; font-weight: 500; display: block; margin-bottom: 15px;}
+        .task-link:hover { text-decoration: underline; }
+        
+        .grading-section { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; gap: 15px; flex-wrap: wrap; }
+        .input-box { flex: 1; min-width: 200px; }
+        .input-box label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; }
+        .input-box input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; }
+        .input-box input:focus { border-color: var(--action); }
+        
+        .btn-update { background-color: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; height: fit-content; align-self: flex-end; transition: 0.2s; }
+        .btn-update:hover { background-color: var(--primary-hover); }
+        
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .bg-pending { background-color: var(--warning-bg); color: #b45309; }
+        .bg-complete { background-color: var(--success-bg); color: #047857; }
+        
+        .empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
     </style>
 </head>
 <body>
 
+<div class="top-bar">
+    <h1>Instructor Dashboard</h1>
+    <a href="index.html" class="back-link">← Back to Student Portal</a>
+</div>
+
 <div class="container">
-    <div id="loginSection">
-        <h2>Admin Login</h2>
-        <input type="text" id="username" placeholder="Username" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button id="loginBtn">Login</button>
-        <p id="errorMsg" style="color: red; display: none; text-align: center;">Invalid username or password!</p>
-        <a href="index.html" style="display: block; text-align: center; margin-top: 10px;">Back to Student Page</a>
+    <div class="filter-group">
+        <label style="display:block; font-size:12px; font-weight:700; color:#64748b; margin-bottom:5px; text-transform:uppercase;">Filter by Task</label>
+        <select id="filterSelect">
+            <option value="All">Show All Tasks</option>
+        </select>
     </div>
 
-    <div id="dashboardSection">
-        <h2>Admin Dashboard</h2>
-        <button id="logoutBtn" style="background-color: #dc3545; width: auto; float: right; padding: 5px 15px;">Logout</button>
-        <div style="clear: both;"></div>
-        <label for="adminTaskSelect">Filter by Task:</label>
-        <select id="adminTaskSelect"></select>
-        <div id="adminList">Awaiting connection...</div>
-    </div>
+    <div id="adminList"><div class="empty-state">Loading submissions...</div></div>
 </div>
 
 <script>
-    // 1. Sabse pehle Tasks generate karwa diye
-    const adminTaskSelect = document.getElementById('adminTaskSelect');
+    const filterSelect = document.getElementById('filterSelect');
     for(let i = 1; i <= 20; i++) {
         let opt = document.createElement('option');
-        opt.value = `Task ${i}`;
-        opt.textContent = `Task ${i}`;
-        adminTaskSelect.appendChild(opt);
+        opt.value = `Task ${i}`; opt.textContent = `Task ${i}`; filterSelect.appendChild(opt);
     }
 
-    const loginSection = document.getElementById('loginSection');
-    const dashboardSection = document.getElementById('dashboardSection');
-    const adminList = document.getElementById('adminList');
-
-    // Login Logic
-    document.getElementById('loginBtn').onclick = () => {
-        if(document.getElementById('username').value === 'admin' && document.getElementById('password').value === '12344231') {
-            loginSection.style.display = 'none'; dashboardSection.style.display = 'block'; fetchAdminTasks();
-        } else { document.getElementById('errorMsg').style.display = 'block'; }
-    };
-
-    document.getElementById('logoutBtn').onclick = () => {
-        loginSection.style.display = 'block'; dashboardSection.style.display = 'none';
-        document.getElementById('username').value = ''; document.getElementById('password').value = '';
-    };
-
-    // 2. YAHAN APNI DETAILS DAALNI HAIN
     const supabaseUrl = 'https://ptwgiadzpzawjftfxwwf.supabase.co'; 
     const supabaseKey = 'sb_publishable_Qoy-USZ2VP94_n5x1BcjWQ_HV5deVBB'; 
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const adminList = document.getElementById('adminList');
 
-    // 3. Database logic
-    try {
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    async function fetchAdminTasks() {
+        adminList.innerHTML = '<div class="empty-state">Loading records...</div>';
+        
+        let query = supabase.from('student_tasks').select('*').order('id', { ascending: false });
+        if (filterSelect.value !== 'All') { query = query.eq('task_name', filterSelect.value); }
+        
+        const { data, error } = await query;
+        if (error) { adminList.innerHTML = '<div class="empty-state">Database error.</div>'; return; }
+        adminList.innerHTML = '';
+        
+        if (data.length === 0) { adminList.innerHTML = '<div class="empty-state">No submissions found.</div>'; return; }
 
-        window.fetchAdminTasks = async function() {
-            adminList.innerHTML = 'Loading...';
-            const { data, error } = await supabase.from('student_tasks').select('*').eq('task_name', adminTaskSelect.value).order('id', { ascending: false });
-            if (error) { adminList.innerHTML = '<p>Please add your correct Supabase URL and Key in the code.</p>'; return; }
-            adminList.innerHTML = '';
-            if(data.length === 0) { adminList.innerHTML = '<p>No submissions for this task yet.</p>'; return; }
-            data.forEach(t => {
-                const div = document.createElement('div'); div.className = 'task-item';
-                if(t.status === 'Pending') {
-                    div.innerHTML = `
-                        <div class="task-info"><p><strong>Link:</strong> <a href="${t.link}" target="_blank">${t.link}</a></p><p><strong>Status:</strong> Pending</p></div>
-                        <div class="marks-area"><input type="text" id="marks-${t.id}" placeholder="Enter marks"><button onclick="submitMarks(${t.id}, this)">Save</button></div>`;
-                } else {
-                    div.innerHTML = `<div class="task-info"><p><strong>Link:</strong> <a href="${t.link}" target="_blank">${t.link}</a></p><p><strong>Status:</strong> <span class="status-complete">Complete</span></p></div><div><strong>Given Marks:</strong> ${t.marks}</div>`;
-                }
-                adminList.appendChild(div);
-            });
-        }
-
-        window.submitMarks = async function(id, btnElement) {
-            const marksValue = document.getElementById(`marks-${id}`).value;
-            if(!marksValue) { alert("Please enter marks first!"); return; }
-            btnElement.disabled = true; btnElement.textContent = "Saving...";
-            const { error } = await supabase.from('student_tasks').update({ status: 'Complete', marks: marksValue }).eq('id', id);
-            if (error) { alert("Error updating marks!"); btnElement.disabled = false; btnElement.textContent = "Save"; } 
-            else { alert("Marks updated successfully!"); fetchAdminTasks(); }
-        };
-
-        adminTaskSelect.onchange = fetchAdminTasks;
-    } catch(err) {
-        // Ignored, will just not fetch data
+        data.forEach(t => {
+            const isComplete = t.status === 'Complete';
+            const div = document.createElement('div');
+            div.className = `task-card ${isComplete ? 'completed' : 'pending'}`;
+            
+            div.innerHTML = `
+                <div class="task-header">
+                    <span class="task-title">${t.task_name}</span>
+                    <span class="badge ${isComplete ? 'bg-complete' : 'bg-pending'}">${t.status}</span>
+                </div>
+                <a href="${t.link}" target="_blank" class="task-link">🔗 ${t.link}</a>
+                
+                <div class="grading-section">
+                    <div class="input-box">
+                        <label>Marks (Out of 10)</label>
+                        <input type="number" id="marks-${t.id}" placeholder="e.g. 9" value="${t.marks || ''}">
+                    </div>
+                    <div class="input-box" style="flex: 2;">
+                        <label>Instructor Remarks</label>
+                        <input type="text" id="remarks-${t.id}" placeholder="e.g. Good job, but improve UI." value="${t.remarks || ''}">
+                    </div>
+                    <button class="btn-update" onclick="updateTask(${t.id})">${isComplete ? 'Update Grade' : 'Mark Complete'}</button>
+                </div>
+            `;
+            adminList.appendChild(div);
+        });
     }
+
+    window.updateTask = async function(id) {
+        const marksVal = document.getElementById(`marks-${id}`).value;
+        const remarksVal = document.getElementById(`remarks-${id}`).value;
+        
+        const btn = event.target;
+        btn.textContent = "Saving...";
+        btn.disabled = true;
+
+        const { error } = await supabase.from('student_tasks')
+            .update({ status: 'Complete', marks: marksVal, remarks: remarksVal })
+            .eq('id', id);
+
+        if (error) alert("Error updating task.");
+        fetchAdminTasks();
+    };
+
+    filterSelect.onchange = fetchAdminTasks;
+    fetchAdminTasks();
 </script>
 </body>
 </html>
