@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #e9ecef; margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { color: #333; text-align: center; }
+        input, select, button { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+        .task-item { background: #fdfdfd; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;}
+        .task-info { flex: 1; min-width: 250px; }
+        .marks-area { display: flex; gap: 10px; align-items: center; }
+        .marks-area input { width: 100px; margin: 0; }
+        .marks-area button { width: auto; background-color: #28a745; margin: 0; }
+        .status-complete { color: #28a745; font-weight: bold; }
+        #dashboardSection { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="loginSection">
+        <h2>Admin Login</h2>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button id="loginBtn">Login</button>
+        <p id="errorMsg" style="color: red; display: none; text-align: center;">Invalid username or password!</p>
+        <a href="index.html" style="display: block; text-align: center; margin-top: 10px;">Back to Student Page</a>
+    </div>
+
+    <div id="dashboardSection">
+        <h2>Admin Dashboard</h2>
+        <button id="logoutBtn" style="background-color: #dc3545; width: auto; float: right; padding: 5px 15px;">Logout</button>
+        <div style="clear: both;"></div>
+        <label for="adminTaskSelect">Filter by Task:</label>
+        <select id="adminTaskSelect"></select>
+        <div id="adminList">Loading...</div>
+    </div>
+</div>
+
+<script>
+    // --- BHAEE YAHAN APNI DETAILS DAALNI HAIN ---
+    const supabaseUrl = 'YAHAN_APNA_SUPABASE_URL_PASTE_KAREIN'; 
+    const supabaseKey = 'YAHAN_APNI_SUPABASE_ANON_KEY_PASTE_KAREIN'; 
+    // --------------------------------------------
+
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    const loginSection = document.getElementById('loginSection');
+    const dashboardSection = document.getElementById('dashboardSection');
+    const adminTaskSelect = document.getElementById('adminTaskSelect');
+    const adminList = document.getElementById('adminList');
+
+    for(let i = 1; i <= 20; i++) {
+        let opt = document.createElement('option');
+        opt.value = `Task ${i}`;
+        opt.textContent = `Task ${i}`;
+        adminTaskSelect.appendChild(opt);
+    }
+
+    document.getElementById('loginBtn').onclick = () => {
+        if(document.getElementById('username').value === 'admin' && document.getElementById('password').value === '12344231') {
+            loginSection.style.display = 'none'; dashboardSection.style.display = 'block'; fetchAdminTasks();
+        } else { document.getElementById('errorMsg').style.display = 'block'; }
+    };
+
+    document.getElementById('logoutBtn').onclick = () => {
+        loginSection.style.display = 'block'; dashboardSection.style.display = 'none';
+        document.getElementById('username').value = ''; document.getElementById('password').value = '';
+    };
+
+    async function fetchAdminTasks() {
+        adminList.innerHTML = 'Loading...';
+        const { data, error } = await supabase.from('student_tasks').select('*').eq('task_name', adminTaskSelect.value).order('id', { ascending: false });
+        if (error) { adminList.innerHTML = '<p>Error loading tasks.</p>'; return; }
+        adminList.innerHTML = '';
+        if(data.length === 0) { adminList.innerHTML = '<p>No submissions for this task yet.</p>'; return; }
+        data.forEach(t => {
+            const div = document.createElement('div'); div.className = 'task-item';
+            if(t.status === 'Pending') {
+                div.innerHTML = `
+                    <div class="task-info"><p><strong>Link:</strong> <a href="${t.link}" target="_blank">${t.link}</a></p><p><strong>Status:</strong> Pending</p></div>
+                    <div class="marks-area"><input type="text" id="marks-${t.id}" placeholder="Enter marks"><button onclick="submitMarks(${t.id}, this)">Save</button></div>`;
+            } else {
+                div.innerHTML = `<div class="task-info"><p><strong>Link:</strong> <a href="${t.link}" target="_blank">${t.link}</a></p><p><strong>Status:</strong> <span class="status-complete">Complete</span></p></div><div><strong>Given Marks:</strong> ${t.marks}</div>`;
+            }
+            adminList.appendChild(div);
+        });
+    }
+
+    window.submitMarks = async function(id, btnElement) {
+        const marksValue = document.getElementById(`marks-${id}`).value;
+        if(!marksValue) { alert("Please enter marks first!"); return; }
+        btnElement.disabled = true; btnElement.textContent = "Saving...";
+        const { error } = await supabase.from('student_tasks').update({ status: 'Complete', marks: marksValue }).eq('id', id);
+        if (error) { alert("Error updating marks!"); btnElement.disabled = false; btnElement.textContent = "Save"; } 
+        else { alert("Marks updated successfully!"); fetchAdminTasks(); }
+    };
+
+    adminTaskSelect.onchange = fetchAdminTasks;
+</script>
+</body>
+</html>
