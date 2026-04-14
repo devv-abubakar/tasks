@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Task Submission</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { color: #333; text-align: center; }
+        select, input[type="url"], button { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { background-color: #28a745; color: white; border: none; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background-color: #218838; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        .task-list { margin-top: 30px; }
+        .task-item { background: #f9f9f9; padding: 15px; border-left: 5px solid #ffc107; margin-bottom: 15px; border-radius: 4px; }
+        .task-item.complete { border-left-color: #28a745; }
+        .status-pending { color: #d39e00; font-weight: bold; }
+        .status-complete { color: #28a745; font-weight: bold; }
+        a { color: #007bff; text-decoration: none; }
+        .admin-link { display: block; text-align: center; margin-top: 20px; font-size: 14px; color: #666; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Submit Your Task</h2>
+    <label for="taskSelect">Select Task:</label>
+    <select id="taskSelect"></select>
+    <input type="url" id="githubLink" placeholder="Paste your GitHub task link here..." required>
+    <button id="submitBtn">Submit Link</button>
+    <div class="task-list">
+        <h3>Submissions for selected task:</h3>
+        <div id="submissionsList">Loading...</div>
+    </div>
+    <a href="admin.html" class="admin-link">Admin Login</a>
+</div>
+
+<script>
+    // --- BHAEE YAHAN APNI DETAILS DAALNI HAIN ---
+    const supabaseUrl = 'YAHAN_APNA_SUPABASE_URL_PASTE_KAREIN'; 
+    const supabaseKey = 'YAHAN_APNI_SUPABASE_ANON_KEY_PASTE_KAREIN'; 
+    // --------------------------------------------
+    
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    const taskSelect = document.getElementById('taskSelect');
+    const linkInput = document.getElementById('githubLink');
+    const submitBtn = document.getElementById('submitBtn');
+    const listContainer = document.getElementById('submissionsList');
+
+    for(let i = 1; i <= 20; i++) {
+        let opt = document.createElement('option');
+        opt.value = `Task ${i}`;
+        opt.textContent = `Task ${i}`;
+        taskSelect.appendChild(opt);
+    }
+
+    async function fetchTasks() {
+        listContainer.innerHTML = 'Loading...';
+        const { data, error } = await supabase.from('student_tasks').select('*').eq('task_name', taskSelect.value).order('id', { ascending: false });
+        if (error) { listContainer.innerHTML = '<p style="color:red;">Error loading tasks.</p>'; return; }
+        listContainer.innerHTML = '';
+        if(data.length === 0) { listContainer.innerHTML = '<p style="color:#777;">No submissions yet.</p>'; return; }
+        data.forEach(t => {
+            const div = document.createElement('div');
+            div.className = `task-item ${t.status === 'Complete' ? 'complete' : ''}`;
+            div.innerHTML = `
+                <p><strong>Link:</strong> <a href="${t.link}" target="_blank">${t.link}</a></p>
+                <p><strong>Status:</strong> <span class="${t.status === 'Complete' ? 'status-complete' : 'status-pending'}">${t.status}</span></p>
+                ${t.status === 'Complete' ? `<p><strong>Marks:</strong> ${t.marks}</p>` : ''}
+            `;
+            listContainer.appendChild(div);
+        });
+    }
+
+    submitBtn.onclick = async () => {
+        if(!linkInput.value) { alert("Please enter a valid link!"); return; }
+        submitBtn.disabled = true; submitBtn.textContent = "Submitting...";
+        const { error } = await supabase.from('student_tasks').insert([{ task_name: taskSelect.value, link: linkInput.value, status: 'Pending', marks: '' }]);
+        if (error) { alert("Error submitting task!"); } else { linkInput.value = ''; fetchTasks(); alert("Task submitted successfully!"); }
+        submitBtn.disabled = false; submitBtn.textContent = "Submit Link";
+    };
+
+    taskSelect.onchange = fetchTasks;
+    fetchTasks();
+</script>
+</body>
+</html>
